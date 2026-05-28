@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/layouts/ProtectedRoute";
 import { Dashboard } from "@/pages/Dashboard";
 import { LoginPage } from "@/pages/LoginPage";
 import { PassageirosPage } from "@/pages/PassageirosPage";
+import { PassageiroPerfilPage } from "@/pages/PassageiroPerfilPage";
 import { StubPage } from "@/components/stub-page";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="passageiros" element={<PassageirosPage />} />
+        <Route path="passageiros/:id" element={<PassageiroPerfilPage />} />
         <Route path="alertas" element={<StubPage title="Alertas" description="Alertas operacionais do CRM." />} />
         <Route path="kanban/comercial" element={<StubPage title="Kanban Comercial" description="Fluxo de leads, fichas, entrevistas e aprovações." />} />
         <Route path="kanban/documentacao" element={<StubPage title="Kanban Documentação" description="Controle das etapas documentais." />} />
