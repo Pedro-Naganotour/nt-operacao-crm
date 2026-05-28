@@ -228,7 +228,14 @@ export function PassageirosPage() {
                 <tbody>
                   {filtered.map((p) => (
                     <tr key={p.id} className="border-b last:border-0">
-                      <td className="py-3 pr-4 font-medium">{p.nome_completo}</td>
+                     <td className="py-3 pr-4 font-medium">
+  <a
+    href={`/passageiros/${p.id}`}
+    className="text-primary hover:underline"
+  >
+    {p.nome_completo}
+  </a>
+</td>
                       <td className="py-3 pr-4">{p.telefone_whatsapp || "—"}</td>
                       <td className="py-3 pr-4">{[p.cidade, p.estado].filter(Boolean).join("/") || "—"}</td>
                       <td className="py-3 pr-4">{p.origem_lead || "—"}</td>
