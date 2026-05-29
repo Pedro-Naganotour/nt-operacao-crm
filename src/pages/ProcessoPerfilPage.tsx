@@ -321,7 +321,7 @@ async function criarApresentacao(vaga: Vaga) {
         </div>
       )}
 
-  {abaAtiva === "Vagas e Entrevistas" && (
+ {abaAtiva === "Vagas e Entrevistas" && (
   <div className="space-y-6">
     <Card titulo="Apresentações deste processo">
       {apresentacoes.length === 0 ? (
@@ -335,62 +335,57 @@ async function criarApresentacao(vaga: Vaga) {
               <p className="font-medium">
                 {apresentacao.empreiteiras?.nome || "Empreiteira não informada"}
               </p>
+
               <p className="text-sm text-gray-600">
                 {apresentacao.vagas?.titulo_vaga || "Vaga não informada"}
               </p>
+
               <p className="text-sm text-gray-500">
                 {apresentacao.vagas?.cidade || "-"} /{" "}
                 {apresentacao.vagas?.provincia || "--"}
               </p>
+
               <p className="mt-2 text-sm">
                 <strong>Status:</strong> {apresentacao.status || "-"}
               </p>
+
               <p className="text-sm">
-  <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
-</p>
+                <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
+              </p>
 
-<div className="mt-4 border-t pt-3">
-  <div className="flex items-center justify-between">
-    <p className="font-medium">Entrevistas</p>
+              <div className="mt-4 border-t pt-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">Entrevistas</p>
 
-    <button
-      onClick={() => criarEntrevista(apresentacao.id)}
-      className="rounded bg-green-600 px-2 py-1 text-xs text-white"
-    >
-      Nova entrevista
-    </button>
-  </div>
+                  <button
+                    onClick={() => criarEntrevista(apresentacao.id)}
+                    className="rounded bg-green-600 px-2 py-1 text-xs text-white"
+                  >
+                    Nova entrevista
+                  </button>
+                </div>
 
-  <div className="mt-2 space-y-2">
-    {entrevistas
-      .filter(
-        (entrevista) =>
-          entrevista.apresentacao_id === apresentacao.id
-      )
-      .map((entrevista) => (
-        <div
-          key={entrevista.id}
-          className="rounded border bg-gray-50 p-2 text-xs"
-        >
-          <p>
-            <strong>Data:</strong>{" "}
-            {entrevista.data_entrevista || "-"}
-          </p>
-
-          <p>
-            <strong>Status:</strong>{" "}
-            {entrevista.status_entrevista || "-"}
-          </p>
-
-          <p>
-            <strong>Resultado:</strong>{" "}
-            {entrevista.resultado || "-"}
-          </p>
-        </div>
-      ))}
-  </div>
-</div>
-            
+                <div className="mt-2 space-y-2">
+                  {entrevistas
+                    .filter((entrevista) => entrevista.apresentacao_id === apresentacao.id)
+                    .map((entrevista) => (
+                      <div
+                        key={entrevista.id}
+                        className="rounded border bg-gray-50 p-2 text-xs"
+                      >
+                        <p>
+                          <strong>Data:</strong> {entrevista.data_entrevista || "-"}
+                        </p>
+                        <p>
+                          <strong>Status:</strong> {entrevista.status_entrevista || "-"}
+                        </p>
+                        <p>
+                          <strong>Resultado:</strong> {entrevista.resultado || "-"}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
             </div>
           ))}
         </div>
