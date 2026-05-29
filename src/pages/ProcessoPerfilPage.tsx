@@ -62,7 +62,17 @@ type ApresentacaoVaga = {
     nome: string;
   } | null;
 };
-
+type Entrevista = {
+  id: string;
+  apresentacao_id: string | null;
+  data_entrevista: string | null;
+  formato: string | null;
+  forma_entrevista: string | null;
+  link_ou_local: string | null;
+  status_entrevista: string | null;
+  resultado: string | null;
+  observacoes: string | null;
+};
 
 const abas = [
   "Resumo",
@@ -80,6 +90,7 @@ export function ProcessoPerfilPage() {
   const [historico, setHistorico] = useState<Historico[]>([]);
   const [vagas, setVagas] = useState<Vaga[]>([]);
 const [apresentacoes, setApresentacoes] = useState<ApresentacaoVaga[]>([]);
+  const [entrevistas, setEntrevistas] = useState<Entrevista[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -117,6 +128,13 @@ const { data: apresentacoesData } = await supabase
   .order("criado_em", { ascending: false });
 
 setVagas((vagasData || []) as Vaga[]);
+      const { data: entrevistasData } = await supabase
+  .from("entrevistas")
+  .select("*")
+  .eq("processo_id", id)
+  .order("data_entrevista", { ascending: true });
+
+setEntrevistas((entrevistasData || []) as Entrevista[]);
 setApresentacoes((apresentacoesData || []) as ApresentacaoVaga[]);
       if (!id) return;
 
@@ -188,6 +206,28 @@ async function criarApresentacao(vaga: Vaga) {
     descricao: `Apresentação criada para a vaga ${vaga.titulo_vaga}.`,
     status_novo: "Apresentação enviada",
   });
+
+  window.location.reload();
+}
+  async function criarEntrevista(apresentacaoId: string) {
+  const data = prompt("Data e hora da entrevista (2026-01-15 09:00)");
+
+  if (!data) return;
+
+  const { error } = await supabase.from("entrevistas").insert({
+    processo_id: id,
+    apresentacao_id: apresentacaoId,
+    data_entrevista: data,
+    formato: "Online",
+    status_entrevista: "Agendada",
+    resultado: "Aguardando",
+  });
+
+  if (error) {
+    alert("Erro ao criar entrevista");
+    console.error(error);
+    return;
+  }
 
   window.location.reload();
 }
@@ -303,6 +343,47 @@ async function criarApresentacao(vaga: Vaga) {
               </p>
               <p className="text-sm">
                 <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
+                <div className="mt-4 border-t pt-3">
+  <div className="flex items-center justify-between">
+    <p className="font-medium">Entrevistas</p>
+
+    <button
+      onClick={() => criarEntrevista(apresentacao.id)}
+      className="rounded bg-green-600 px-2 py-1 text-xs text-white"
+    >
+      Nova entrevista
+    </button>
+  </div>
+
+  <div className="mt-2 space-y-2">
+    {entrevistas
+      .filter(
+        (entrevista) =>
+          entrevista.apresentacao_id === apresentacao.id
+      )
+      .map((entrevista) => (
+        <div
+          key={entrevista.id}
+          className="rounded border bg-gray-50 p-2 text-xs"
+        >
+          <p>
+            <strong>Data:</strong>{" "}
+            {entrevista.data_entrevista || "-"}
+          </p>
+
+          <p>
+            <strong>Status:</strong>{" "}
+            {entrevista.status_entrevista || "-"}
+          </p>
+
+          <p>
+            <strong>Resultado:</strong>{" "}
+            {entrevista.resultado || "-"}
+          </p>
+        </div>
+      ))}
+  </div>
+</div>
               </p>
             </div>
           ))}
