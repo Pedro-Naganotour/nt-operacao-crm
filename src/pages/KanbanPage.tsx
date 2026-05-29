@@ -38,49 +38,84 @@ export function KanbanPage() {
   const [processos, setProcessos] = useState<ProcessoKanban[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function carregarKanban() {
-      setLoading(true);
+  async function carregarKanban() {
+    setLoading(true);
 
-      const { data, error } = await supabase
-        .from("processos")
-        .select(`
+    const { data, error } = await supabase
+      .from("processos")
+      .select(`
+        id,
+        pessoa_id,
+        codigo_processo,
+        status_atual,
+        fase_atual,
+        criado_em,
+        pessoas (
           id,
-          pessoa_id,
-          codigo_processo,
-          status_atual,
-          fase_atual,
-          criado_em,
-          pessoas (
-            id,
-            nome_completo,
-            telefone_whatsapp,
-            cidade,
-            estado,
-            classificacao_risco
-          )
-        `)
-        .eq("ativo", true)
-        .order("criado_em", { ascending: false });
+          nome_completo,
+          telefone_whatsapp,
+          cidade,
+          estado,
+          classificacao_risco
+        )
+      `)
+      .eq("ativo", true)
+      .order("criado_em", { ascending: false });
 
-      if (error) {
-        console.error("Erro ao carregar kanban:", error);
-        setProcessos([]);
-      } else {
-        setProcessos((data || []) as ProcessoKanban[]);
-      }
-
-      setLoading(false);
+    if (error) {
+      console.error("Erro ao carregar kanban:", error);
+      setProcessos([]);
+    } else {
+      setProcessos((data || []) as ProcessoKanban[]);
     }
 
+    setLoading(false);
+  }
+
+  useEffect(() => {
     carregarKanban();
   }, []);
 
+  async function moverProcesso(processo: ProcessoKanban, novoStatus: string) {
+    const statusAnterior = processo.status_atual || "Lead novo";
+
+    if (statusAnterior === novoStatus) return;
+
+    const { error: updateError } = await supabase
+      .from("processos")
+      .update({
+        status_atual: novoStatus,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("id", processo.id);
+
+    if (updateError) {
+      alert("Erro ao mover processo.");
+      console.error(updateError);
+      return;
+    }
+
+    const { error: historicoError } = await supabase.from("historico").insert({
+      pessoa_id: processo.pessoa_id,
+      processo_id: processo.id,
+      tipo_evento: "Mudança de status",
+      descricao: `Processo movido de "${statusAnterior}" para "${novoStatus}".`,
+      status_anterior: statusAnterior,
+      status_novo: novoStatus,
+    });
+
+    if (historicoError) {
+      console.error("Erro ao registrar histórico:", historicoError);
+    }
+
+    await carregarKanban();
+  }
+
   const processosPorColuna = useMemo(() => {
     return colunas.reduce<Record<string, ProcessoKanban[]>>((acc, coluna) => {
-      acc[coluna] = processos.filter((processo) => {
-        return (processo.status_atual || "Lead novo") === coluna;
-      });
+      acc[coluna] = processos.filter(
+        (processo) => (processo.status_atual || "Lead novo") === coluna
+      );
       return acc;
     }, {});
   }, [processos]);
@@ -92,9 +127,9 @@ export function KanbanPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold">Kanban Operacional</h1>
+        <h1 className="text-2xl font-bold">Kanban Comercial</h1>
         <p className="text-sm text-gray-500">
-          Visualização dos processos ativos por status.
+          Visualização e movimentação dos processos ativos.
         </p>
       </div>
 
@@ -102,7 +137,7 @@ export function KanbanPage() {
         {colunas.map((coluna) => (
           <div
             key={coluna}
-            className="min-w-[280px] rounded-xl border bg-gray-50 p-3"
+            className="min-w-[290px] rounded-xl border bg-gray-50 p-3"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold">{coluna}</h2>
@@ -116,14 +151,18 @@ export function KanbanPage() {
                 <p className="text-sm text-gray-400">Nenhum processo</p>
               ) : (
                 processosPorColuna[coluna].map((processo) => (
-                  <Link
+                  <div
                     key={processo.id}
-                    to={`/passageiros/${processo.pessoa_id}`}
-                    className="block rounded-lg border bg-white p-3 shadow-sm transition hover:border-blue-400 hover:shadow-md"
+                    className="rounded-lg border bg-white p-3 shadow-sm"
                   >
-                    <p className="font-medium">
-                      {processo.pessoas?.nome_completo || "Pessoa sem nome"}
-                    </p>
+                    <Link
+                      to={`/passageiros/${processo.pessoa_id}`}
+                      className="block hover:underline"
+                    >
+                      <p className="font-medium">
+                        {processo.pessoas?.nome_completo || "Pessoa sem nome"}
+                      </p>
+                    </Link>
 
                     <p className="mt-1 text-xs text-gray-500">
                       {processo.codigo_processo || "Sem código"}
@@ -144,7 +183,24 @@ export function KanbanPage() {
                           Risco: {processo.pessoas.classificacao_risco}
                         </div>
                       )}
-                  </Link>
+
+                    <div className="mt-3">
+                      <label className="mb-1 block text-xs text-gray-500">
+                        Mover para:
+                      </label>
+                      <select
+                        value={processo.status_atual || "Lead novo"}
+                        onChange={(e) => moverProcesso(processo, e.target.value)}
+                        className="w-full rounded-md border px-2 py-1 text-sm"
+                      >
+                        {colunas.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
