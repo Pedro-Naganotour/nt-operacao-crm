@@ -346,8 +346,10 @@ async function criarApresentacao(vaga: Vaga) {
                 <strong>Status:</strong> {apresentacao.status || "-"}
               </p>
               <p className="text-sm">
-                <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
-                <div className="mt-4 border-t pt-3">
+  <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
+</p>
+
+<div className="mt-4 border-t pt-3">
   <div className="flex items-center justify-between">
     <p className="font-medium">Entrevistas</p>
 
@@ -388,7 +390,7 @@ async function criarApresentacao(vaga: Vaga) {
       ))}
   </div>
 </div>
-              </p>
+            
             </div>
           ))}
         </div>
