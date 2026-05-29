@@ -234,7 +234,7 @@ async function criarApresentacao(vaga: Vaga) {
   }
 
   window.location.reload();
-
+ }
   return (
     <div className="space-y-6 p-6">
       <Link to="/passageiros" className="text-sm text-blue-600 hover:underline">
