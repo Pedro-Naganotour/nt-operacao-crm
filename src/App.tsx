@@ -8,6 +8,7 @@ import { PassageiroPerfilPage } from "@/pages/PassageiroPerfilPage";
 import { StubPage } from "@/components/stub-page";
 import { KanbanPage } from "@/pages/KanbanPage";
 import { VagasPage } from "@/pages/VagasPage";
+import { EmpreiteirasPage } from "@/pages/EmpreiteirasPage";
 
 export default function App() {
   return (
@@ -32,7 +33,7 @@ export default function App() {
         <Route path="kanban/coe-visto" element={<StubPage title="Kanban COE / Visto" description="Acompanhamento de COE, visto e exigências." />} />
         <Route path="kanban/embarque" element={<StubPage title="Kanban Embarque" description="Reconsulta, passagens, contratos, exames e embarques." />} />
         <Route path="vagas" element={<VagasPage />} />
-        <Route path="empreiteiras" element={<StubPage title="Empreiteiras" description="Cadastro de empreiteiras parceiras." />} />
+        <Route path="empreiteiras" element={<EmpreiteirasPage />} />
         <Route path="fabricas" element={<StubPage title="Fábricas" description="Cadastro de fábricas vinculadas às empreiteiras." />} />
         <Route path="despachantes" element={<StubPage title="Despachantes" description="Cadastro de despachantes e custos de visto." />} />
         <Route path="documentos" element={<StubPage title="Documentos" description="Controle de documentos, certidões, COE, visto e anexos." />} />
