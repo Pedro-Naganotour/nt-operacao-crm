@@ -277,7 +277,7 @@ async function criarApresentacao(vaga: Vaga) {
         </div>
       )}
 
-     {abaAtiva === "Vagas e Entrevistas" && (
+  {abaAtiva === "Vagas e Entrevistas" && (
   <div className="space-y-6">
     <Card titulo="Apresentações deste processo">
       {apresentacoes.length === 0 ? (
@@ -317,36 +317,64 @@ async function criarApresentacao(vaga: Vaga) {
         </p>
       ) : (
         <div className="space-y-3">
-          {vagas.map((vaga) => (
-            <div
-              key={vaga.id}
-              className="rounded-lg border p-4 flex items-center justify-between"
-            >
-              <div>
-                <p className="font-medium">{vaga.titulo_vaga}</p>
-                <p className="text-sm text-gray-600">
-                  {vaga.empreiteiras?.nome || "Sem empreiteira"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {vaga.cidade || "-"} / {vaga.provincia || "--"} ·{" "}
-                  {vaga.status_vaga || "-"}
-                </p>
-              </div>
+          {vagas.map((vaga) => {
+            const apresentacoesDaVaga = apresentacoes.filter(
+              (apresentacao) => apresentacao.vaga_id === vaga.id
+            );
 
-              <button
-                onClick={() => criarApresentacao(vaga)}
-                className="rounded bg-blue-600 px-3 py-2 text-sm text-white"
+            const ultimaApresentacao = apresentacoesDaVaga[0];
+
+            return (
+              <div
+                key={vaga.id}
+                className="rounded-lg border p-4 flex items-center justify-between"
               >
-                Apresentar
-              </button>
-            </div>
-          ))}
+                <div>
+                  <p className="font-medium">{vaga.titulo_vaga}</p>
+
+                  <p className="text-sm text-gray-600">
+                    {vaga.empreiteiras?.nome || "Sem empreiteira"}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {vaga.cidade || "-"} / {vaga.provincia || "--"} ·{" "}
+                    {vaga.status_vaga || "-"}
+                  </p>
+
+                  {apresentacoesDaVaga.length > 0 && (
+                    <div className="mt-2 rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                      <p>
+                        Já apresentada: {apresentacoesDaVaga.length}{" "}
+                        {apresentacoesDaVaga.length === 1 ? "vez" : "vezes"}
+                      </p>
+                      <p>
+                        Última apresentação:{" "}
+                        {ultimaApresentacao?.data_apresentacao || "-"}
+                      </p>
+                      <p>
+                        Último resultado:{" "}
+                        {ultimaApresentacao?.resultado_final || "-"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => criarApresentacao(vaga)}
+                  className="rounded bg-blue-600 px-3 py-2 text-sm text-white"
+                >
+                  {apresentacoesDaVaga.length > 0
+                    ? "Apresentar novamente"
+                    : "Apresentar"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </Card>
   </div>
 )}
-
       {abaAtiva === "Documentação" && (
         <Card titulo="Documentação">
           <p className="text-sm text-gray-500">
