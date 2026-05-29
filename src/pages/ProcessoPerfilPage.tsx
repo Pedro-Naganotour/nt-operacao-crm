@@ -62,7 +62,7 @@ type ApresentacaoVaga = {
     nome: string;
   } | null;
 };
-};
+
 
 const abas = [
   "Resumo",
