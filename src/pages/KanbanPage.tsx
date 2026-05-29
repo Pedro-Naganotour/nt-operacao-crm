@@ -156,7 +156,7 @@ export function KanbanPage() {
                     className="rounded-lg border bg-white p-3 shadow-sm"
                   >
                     <Link
-                      to={`/passageiros/${processo.pessoa_id}`}
+                     to={`/processos/${processo.id}`}
                       className="block hover:underline"
                     >
                       <p className="font-medium">
