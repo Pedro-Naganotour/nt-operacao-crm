@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 
@@ -66,13 +66,13 @@ const abas = [
   "Resumo",
   "Dados pessoais",
   "Processo atual",
+  "Grupo familiar",
   "Histórico",
   "Documentos",
   "Financeiro",
   "Riscos",
   "Passagem",
   "Pós-venda",
-  "Grupo familiar",
 ];
 
 export function PassageiroPerfilPage() {
@@ -81,6 +81,8 @@ export function PassageiroPerfilPage() {
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [historico, setHistorico] = useState<Historico[]>([]);
+  const [grupoFamiliar, setGrupoFamiliar] = useState<GrupoFamiliar | null>(null);
+  const [membrosGrupo, setMembrosGrupo] = useState<MembroGrupo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -106,46 +108,47 @@ export function PassageiroPerfilPage() {
         .select("*")
         .eq("pessoa_id", id)
         .order("criado_em", { ascending: false });
+
       const { data: vinculoGrupo } = await supabase
-  .from("grupo_familiar_membros")
-  .select("grupo_id")
-  .eq("pessoa_id", id)
-  .maybeSingle();
+        .from("grupo_familiar_membros")
+        .select("grupo_id")
+        .eq("pessoa_id", id)
+        .maybeSingle();
 
-if (vinculoGrupo?.grupo_id) {
-  const { data: grupoData } = await supabase
-    .from("grupos_familiares")
-    .select("*")
-    .eq("id", vinculoGrupo.grupo_id)
-    .single();
+      if (vinculoGrupo?.grupo_id) {
+        const { data: grupoData } = await supabase
+          .from("grupos_familiares")
+          .select("*")
+          .eq("id", vinculoGrupo.grupo_id)
+          .single();
 
-  const { data: membrosData } = await supabase
-    .from("grupo_familiar_membros")
-    .select(`
-      id,
-      papel_no_grupo,
-      parentesco,
-      responsavel_principal,
-      pessoas (
-        id,
-        nome_completo,
-        telefone_whatsapp,
-        status_geral
-      )
-    `)
-    .eq("grupo_id", vinculoGrupo.grupo_id)
-    .order("responsavel_principal", { ascending: false });
+        const { data: membrosData } = await supabase
+          .from("grupo_familiar_membros")
+          .select(`
+            id,
+            papel_no_grupo,
+            parentesco,
+            responsavel_principal,
+            pessoas (
+              id,
+              nome_completo,
+              telefone_whatsapp,
+              status_geral
+            )
+          `)
+          .eq("grupo_id", vinculoGrupo.grupo_id)
+          .order("responsavel_principal", { ascending: false });
 
-  setGrupoFamiliar(grupoData);
-  setMembrosGrupo((membrosData || []) as MembroGrupo[]);
-} else {
-  setGrupoFamiliar(null);
-  setMembrosGrupo([]);
-}
+        setGrupoFamiliar(grupoData as GrupoFamiliar);
+        setMembrosGrupo((membrosData || []) as MembroGrupo[]);
+      } else {
+        setGrupoFamiliar(null);
+        setMembrosGrupo([]);
+      }
 
-      setPessoa(pessoaData);
-      setProcessos(processosData || []);
-      setHistorico(historicoData || []);
+      setPessoa(pessoaData as Pessoa);
+      setProcessos((processosData || []) as Processo[]);
+      setHistorico((historicoData || []) as Historico[]);
       setLoading(false);
     }
 
@@ -165,31 +168,10 @@ if (vinculoGrupo?.grupo_id) {
       </a>
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{pessoa.nome_completo}</h1>
-            <p className="text-sm text-gray-500">
-              {pessoa.telefone_whatsapp || "Sem WhatsApp"} ·{" "}
-              {pessoa.cidade || "Cidade não informada"} / {pessoa.estado || "--"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700">
-              {pessoa.status_geral || "Lead novo"}
-            </span>
-
-            <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-700">
-              Risco: {pessoa.classificacao_risco || "Sem risco"}
-            </span>
-
-            {pessoa.bloqueado_novo_processo && (
-              <span className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700">
-                Bloqueado
-              </span>
-            )}
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold">{pessoa.nome_completo}</h1>
+        <p className="text-sm text-gray-500">
+          {pessoa.telefone_whatsapp || "Sem WhatsApp"} · {pessoa.cidade || "Cidade não informada"} / {pessoa.estado || "--"}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b">
@@ -211,24 +193,18 @@ if (vinculoGrupo?.grupo_id) {
       {abaAtiva === "Resumo" && (
         <div className="grid gap-4 md:grid-cols-3">
           <Card titulo="Status atual">
-            <p>{pessoa.status_geral || "Lead novo"}</p>
-            <p className="mt-2 text-sm text-gray-500">
-              Fase: {processoAtual?.fase_atual || "-"}
-            </p>
+            <Info label="Status" value={pessoa.status_geral} />
+            <Info label="Fase" value={processoAtual?.fase_atual} />
           </Card>
 
           <Card titulo="Processo atual">
-            <p>{processoAtual?.status_atual || "Nenhum processo encontrado"}</p>
-            <p className="mt-2 text-sm text-gray-500">
-              Início: {processoAtual?.data_inicio || "-"}
-            </p>
+            <Info label="Status" value={processoAtual?.status_atual} />
+            <Info label="Início" value={processoAtual?.data_inicio} />
           </Card>
 
           <Card titulo="Risco">
-            <p>{pessoa.classificacao_risco || "Sem risco"}</p>
-            <p className="mt-2 text-sm text-gray-500">
-              {pessoa.motivo_bloqueio || "Nenhum bloqueio registrado."}
-            </p>
+            <Info label="Classificação" value={pessoa.classificacao_risco} />
+            <Info label="Bloqueio" value={pessoa.motivo_bloqueio} />
           </Card>
         </div>
       )}
@@ -243,7 +219,7 @@ if (vinculoGrupo?.grupo_id) {
           <Info label="E-mail" value={pessoa.email} />
           <Info label="Cidade" value={pessoa.cidade} />
           <Info label="Estado" value={pessoa.estado} />
-          <Info label="Origem do lead" value={pessoa.origem_lead} />
+          <Info label="Origem" value={pessoa.origem_lead} />
           <Info label="Observações" value={pessoa.observacoes_gerais} />
         </Card>
       )}
@@ -266,65 +242,40 @@ if (vinculoGrupo?.grupo_id) {
           )}
         </Card>
       )}
-{abaAtiva === "Grupo familiar" && (
-  <Card titulo="Grupo familiar">
-    {grupoFamiliar ? (
-      <div className="space-y-4">
-        <div>
-          <p>
-            <strong>Grupo:</strong> {grupoFamiliar.nome_grupo}
-          </p>
-          <p>
-            <strong>Status:</strong> {grupoFamiliar.status_grupo || "-"}
-          </p>
-          <p>
-            <strong>Observações:</strong> {grupoFamiliar.observacoes || "-"}
-          </p>
-        </div>
 
-        <div className="space-y-2">
-          <h3 className="font-semibold">Membros</h3>
+      {abaAtiva === "Grupo familiar" && (
+        <Card titulo="Grupo familiar">
+          {grupoFamiliar ? (
+            <div className="space-y-4">
+              <Info label="Grupo" value={grupoFamiliar.nome_grupo} />
+              <Info label="Status" value={grupoFamiliar.status_grupo} />
+              <Info label="Observações" value={grupoFamiliar.observacoes} />
 
-          {membrosGrupo.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Nenhum membro vinculado.
-            </p>
-          ) : (
-            membrosGrupo.map((membro) => (
-              <div key={membro.id} className="rounded-lg border p-3">
-                <p className="font-medium">
-                  {membro.pessoas?.nome_completo || "Pessoa sem nome"}
-                  {membro.responsavel_principal ? " · Responsável" : ""}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Parentesco: {membro.parentesco || "-"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Papel: {membro.papel_no_grupo || "-"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  WhatsApp: {membro.pessoas?.telefone_whatsapp || "-"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Status: {membro.pessoas?.status_geral || "-"}
-                </p>
+              <div className="space-y-2">
+                <h3 className="font-semibold">Membros</h3>
+
+                {membrosGrupo.map((membro) => (
+                  <div key={membro.id} className="rounded-lg border p-3">
+                    <p className="font-medium">
+                      {membro.pessoas?.nome_completo || "Pessoa sem nome"}
+                      {membro.responsavel_principal ? " · Responsável" : ""}
+                    </p>
+                    <p className="text-sm text-gray-600">Parentesco: {membro.parentesco || "-"}</p>
+                    <p className="text-sm text-gray-600">Papel: {membro.papel_no_grupo || "-"}</p>
+                    <p className="text-sm text-gray-600">WhatsApp: {membro.pessoas?.telefone_whatsapp || "-"}</p>
+                    <p className="text-sm text-gray-600">Status: {membro.pessoas?.status_geral || "-"}</p>
+                  </div>
+                ))}
               </div>
-            ))
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Esta pessoa ainda não está vinculada a nenhum grupo familiar.
+            </p>
           )}
-        </div>
-      </div>
-    ) : (
-      <div className="space-y-3">
-        <p className="text-sm text-gray-500">
-          Esta pessoa ainda não está vinculada a nenhum grupo familiar.
-        </p>
-        <p className="text-sm text-gray-500">
-          Próxima etapa: criar botão para criar grupo familiar e adicionar membros.
-        </p>
-      </div>
-    )}
-  </Card>
-)}
+        </Card>
+      )}
+
       {abaAtiva === "Histórico" && (
         <Card titulo="Histórico">
           {historico.length === 0 ? (
@@ -335,11 +286,6 @@ if (vinculoGrupo?.grupo_id) {
                 <div key={item.id} className="rounded-lg border p-3">
                   <p className="font-medium">{item.tipo_evento}</p>
                   <p className="text-sm text-gray-600">{item.descricao}</p>
-                  {(item.status_anterior || item.status_novo) && (
-                    <p className="mt-1 text-xs text-gray-500">
-                      {item.status_anterior || "-"} → {item.status_novo || "-"}
-                    </p>
-                  )}
                   <p className="mt-1 text-xs text-gray-400">
                     {new Date(item.criado_em).toLocaleString("pt-BR")}
                   </p>
@@ -350,90 +296,22 @@ if (vinculoGrupo?.grupo_id) {
         </Card>
       )}
 
-
-if (vinculoGrupo?.grupo_id) {
-  const { data: grupoData } = await supabase
-    .from("grupos_familiares")
-    .select("*")
-    .eq("id", vinculoGrupo.grupo_id)
-    .single();
-
-  const { data: membrosData } = await supabase
-    .from("grupo_familiar_membros")
-    .select(`
-      id,
-      papel_no_grupo,
-      parentesco,
-      responsavel_principal,
-      pessoas (
-        id,
-        nome_completo,
-        telefone_whatsapp,
-        status_geral
-      )
-    `)
-    .eq("grupo_id", vinculoGrupo.grupo_id)
-    .order("responsavel_principal", { ascending: false });
-
-  setGrupoFamiliar(grupoData);
-  setMembrosGrupo((membrosData || []) as MembroGrupo[]);
-} else {
-  setGrupoFamiliar(null);
-  setMembrosGrupo([]);
-}
-      {abaAtiva === "Documentos" && (
-        <Card titulo="Documentos">
-          <p className="text-sm text-gray-500">
-            Módulo preparado. Próxima etapa: criar tabela de documentos e upload de arquivos.
-          </p>
-        </Card>
-      )}
-
-      {abaAtiva === "Financeiro" && (
-        <Card titulo="Financeiro">
-          <p className="text-sm text-gray-500">
-            Módulo preparado. Próxima etapa: criar controle de custos por processo.
-          </p>
-        </Card>
-      )}
-
+      {abaAtiva === "Documentos" && <Card titulo="Documentos"><p>Módulo preparado.</p></Card>}
+      {abaAtiva === "Financeiro" && <Card titulo="Financeiro"><p>Módulo preparado.</p></Card>}
       {abaAtiva === "Riscos" && (
-        <Card titulo="Riscos e dívidas">
-          <Info label="Classificação de risco" value={pessoa.classificacao_risco} />
-          <Info
-            label="Bloqueado para novo processo"
-            value={pessoa.bloqueado_novo_processo ? "Sim" : "Não"}
-          />
-          <Info label="Motivo do bloqueio" value={pessoa.motivo_bloqueio} />
+        <Card titulo="Riscos">
+          <Info label="Classificação" value={pessoa.classificacao_risco} />
+          <Info label="Bloqueado" value={pessoa.bloqueado_novo_processo ? "Sim" : "Não"} />
+          <Info label="Motivo" value={pessoa.motivo_bloqueio} />
         </Card>
       )}
-
-      {abaAtiva === "Passagem" && (
-        <Card titulo="Passagem aérea">
-          <p className="text-sm text-gray-500">
-            Módulo preparado. Próxima etapa: criar controle de reservas, autorização e emissão.
-          </p>
-        </Card>
-      )}
-
-      {abaAtiva === "Pós-venda" && (
-        <Card titulo="Pós-venda">
-          <p className="text-sm text-gray-500">
-            Módulo preparado. Próxima etapa: criar check-ins de 7, 15, 30, 60 e 90 dias.
-          </p>
-        </Card>
-      )}
+      {abaAtiva === "Passagem" && <Card titulo="Passagem aérea"><p>Módulo preparado.</p></Card>}
+      {abaAtiva === "Pós-venda" && <Card titulo="Pós-venda"><p>Módulo preparado.</p></Card>}
     </div>
   );
 }
 
-function Card({
-  titulo,
-  children,
-}: {
-  titulo: string;
-  children: React.ReactNode;
-}) {
+function Card({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <div className="rounded-xl border bg-white p-5 shadow-sm">
       <h2 className="mb-4 text-lg font-semibold">{titulo}</h2>
