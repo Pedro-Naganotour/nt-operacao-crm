@@ -230,7 +230,65 @@ export function PassageiroPerfilPage() {
           )}
         </Card>
       )}
+{abaAtiva === "Grupo familiar" && (
+  <Card titulo="Grupo familiar">
+    {grupoFamiliar ? (
+      <div className="space-y-4">
+        <div>
+          <p>
+            <strong>Grupo:</strong> {grupoFamiliar.nome_grupo}
+          </p>
+          <p>
+            <strong>Status:</strong> {grupoFamiliar.status_grupo || "-"}
+          </p>
+          <p>
+            <strong>Observações:</strong> {grupoFamiliar.observacoes || "-"}
+          </p>
+        </div>
 
+        <div className="space-y-2">
+          <h3 className="font-semibold">Membros</h3>
+
+          {membrosGrupo.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              Nenhum membro vinculado.
+            </p>
+          ) : (
+            membrosGrupo.map((membro) => (
+              <div key={membro.id} className="rounded-lg border p-3">
+                <p className="font-medium">
+                  {membro.pessoas?.nome_completo || "Pessoa sem nome"}
+                  {membro.responsavel_principal ? " · Responsável" : ""}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Parentesco: {membro.parentesco || "-"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Papel: {membro.papel_no_grupo || "-"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  WhatsApp: {membro.pessoas?.telefone_whatsapp || "-"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Status: {membro.pessoas?.status_geral || "-"}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        <p className="text-sm text-gray-500">
+          Esta pessoa ainda não está vinculada a nenhum grupo familiar.
+        </p>
+        <p className="text-sm text-gray-500">
+          Próxima etapa: criar botão para criar grupo familiar e adicionar membros.
+        </p>
+      </div>
+    )}
+  </Card>
+)}
       {abaAtiva === "Histórico" && (
         <Card titulo="Histórico">
           {historico.length === 0 ? (
@@ -255,7 +313,42 @@ export function PassageiroPerfilPage() {
           )}
         </Card>
       )}
+const { data: vinculoGrupo } = await supabase
+  .from("grupo_familiar_membros")
+  .select("grupo_id")
+  .eq("pessoa_id", id)
+  .maybeSingle();
 
+if (vinculoGrupo?.grupo_id) {
+  const { data: grupoData } = await supabase
+    .from("grupos_familiares")
+    .select("*")
+    .eq("id", vinculoGrupo.grupo_id)
+    .single();
+
+  const { data: membrosData } = await supabase
+    .from("grupo_familiar_membros")
+    .select(`
+      id,
+      papel_no_grupo,
+      parentesco,
+      responsavel_principal,
+      pessoas (
+        id,
+        nome_completo,
+        telefone_whatsapp,
+        status_geral
+      )
+    `)
+    .eq("grupo_id", vinculoGrupo.grupo_id)
+    .order("responsavel_principal", { ascending: false });
+
+  setGrupoFamiliar(grupoData);
+  setMembrosGrupo((membrosData || []) as MembroGrupo[]);
+} else {
+  setGrupoFamiliar(null);
+  setMembrosGrupo([]);
+}
       {abaAtiva === "Documentos" && (
         <Card titulo="Documentos">
           <p className="text-sm text-gray-500">
