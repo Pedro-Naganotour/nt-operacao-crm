@@ -210,9 +210,31 @@ async function criarApresentacao(vaga: Vaga) {
   window.location.reload();
 }
   async function criarEntrevista(apresentacaoId: string) {
-  const data = prompt("Data e hora da entrevista (2026-01-15 09:00)");
-
+  const data = prompt("Data da entrevista no formato AAAA-MM-DD. Ex: 2026-01-15");
   if (!data) return;
+
+  const hora = prompt("Horário da entrevista. Ex: 09:00");
+  if (!hora) return;
+
+  const dataHora = `${data}T${hora}:00`;
+
+  const { error } = await supabase.from("entrevistas").insert({
+    processo_id: id,
+    apresentacao_id: apresentacaoId,
+    data_entrevista: dataHora,
+    formato: "Online",
+    status_entrevista: "Agendada",
+    resultado: "Aguardando",
+  });
+
+  if (error) {
+    alert("Erro ao criar entrevista.");
+    console.error(error);
+    return;
+  }
+
+  window.location.reload();
+}
 
   const { error } = await supabase.from("entrevistas").insert({
     processo_id: id,
