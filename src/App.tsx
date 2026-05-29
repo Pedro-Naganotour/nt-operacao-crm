@@ -8,6 +8,7 @@ import { PassageiroPerfilPage } from "@/pages/PassageiroPerfilPage";
 import { StubPage } from "@/components/stub-page";
 import { KanbanPage } from "@/pages/KanbanPage";
 
+
 export default function App() {
   return (
     <Routes>
@@ -26,7 +27,7 @@ export default function App() {
         <Route path="passageiros/:id" element={<PassageiroPerfilPage />} />
         <Route path="kanban" element={<KanbanPage />} />
         <Route path="alertas" element={<StubPage title="Alertas" description="Alertas operacionais do CRM." />} />
-        <Route path="kanban/comercial" element={<StubPage title="Kanban Comercial" description="Fluxo de leads, fichas, entrevistas e aprovações." />} />
+        <Route path="kanban/comercial" element={<KanbanPage />} />
         <Route path="kanban/documentacao" element={<StubPage title="Kanban Documentação" description="Controle das etapas documentais." />} />
         <Route path="kanban/coe-visto" element={<StubPage title="Kanban COE / Visto" description="Acompanhamento de COE, visto e exigências." />} />
         <Route path="kanban/embarque" element={<StubPage title="Kanban Embarque" description="Reconsulta, passagens, contratos, exames e embarques." />} />
