@@ -106,6 +106,42 @@ export function PassageiroPerfilPage() {
         .select("*")
         .eq("pessoa_id", id)
         .order("criado_em", { ascending: false });
+      const { data: vinculoGrupo } = await supabase
+  .from("grupo_familiar_membros")
+  .select("grupo_id")
+  .eq("pessoa_id", id)
+  .maybeSingle();
+
+if (vinculoGrupo?.grupo_id) {
+  const { data: grupoData } = await supabase
+    .from("grupos_familiares")
+    .select("*")
+    .eq("id", vinculoGrupo.grupo_id)
+    .single();
+
+  const { data: membrosData } = await supabase
+    .from("grupo_familiar_membros")
+    .select(`
+      id,
+      papel_no_grupo,
+      parentesco,
+      responsavel_principal,
+      pessoas (
+        id,
+        nome_completo,
+        telefone_whatsapp,
+        status_geral
+      )
+    `)
+    .eq("grupo_id", vinculoGrupo.grupo_id)
+    .order("responsavel_principal", { ascending: false });
+
+  setGrupoFamiliar(grupoData);
+  setMembrosGrupo((membrosData || []) as MembroGrupo[]);
+} else {
+  setGrupoFamiliar(null);
+  setMembrosGrupo([]);
+}
 
       setPessoa(pessoaData);
       setProcessos(processosData || []);
@@ -313,11 +349,7 @@ export function PassageiroPerfilPage() {
           )}
         </Card>
       )}
-const { data: vinculoGrupo } = await supabase
-  .from("grupo_familiar_membros")
-  .select("grupo_id")
-  .eq("pessoa_id", id)
-  .maybeSingle();
+
 
 if (vinculoGrupo?.grupo_id) {
   const { data: grupoData } = await supabase
