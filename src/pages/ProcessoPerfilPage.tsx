@@ -234,31 +234,7 @@ async function criarApresentacao(vaga: Vaga) {
   }
 
   window.location.reload();
-}
 
-  const hora = prompt("Horário da entrevista. Ex: 09:00");
-  if (!hora) return;
-
-  const dataHora = `${data}T${hora}:00`;
-
-  const { error } = await supabase.from("entrevistas").insert({
-    processo_id: id,
-    apresentacao_id: apresentacaoId,
-    data_entrevista: dataHora,
-    formato: "Online",
-    status_entrevista: "Agendada",
-    resultado: "Aguardando",
-  });
-
-  if (error) {
-    alert("Erro ao criar entrevista.");
-    console.error(error);
-    return;
-  }
-
- 
-  window.location.reload();
-}
   return (
     <div className="space-y-6 p-6">
       <Link to="/passageiros" className="text-sm text-blue-600 hover:underline">
