@@ -42,6 +42,26 @@ type Historico = {
   criado_em: string;
 };
 
+type GrupoFamiliar = {
+  id: string;
+  nome_grupo: string;
+  status_grupo: string | null;
+  observacoes: string | null;
+};
+
+type MembroGrupo = {
+  id: string;
+  papel_no_grupo: string | null;
+  parentesco: string | null;
+  responsavel_principal: boolean | null;
+  pessoas: {
+    id: string;
+    nome_completo: string;
+    telefone_whatsapp: string | null;
+    status_geral: string | null;
+  } | null;
+};
+
 const abas = [
   "Resumo",
   "Dados pessoais",
@@ -52,6 +72,7 @@ const abas = [
   "Riscos",
   "Passagem",
   "Pós-venda",
+  "Grupo familiar",
 ];
 
 export function PassageiroPerfilPage() {
