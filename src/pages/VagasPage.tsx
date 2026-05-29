@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../integrations/supabase/client";
 
+type Empreiteira = {
+  id: string;
+  nome: string;
+};
+
 type Vaga = {
   id: string;
+  empreiteira_id: string | null;
   titulo_vaga: string;
   cidade: string | null;
   provincia: string | null;
@@ -14,17 +20,13 @@ type Vaga = {
   status_vaga: string | null;
   urgente: boolean | null;
   observacoes: string | null;
-empreiteira_id: string | null;
-empreiteiras: {
-  nome: string;
-} | null;
-};
-type Empreiteira = {
-  id: string;
-  nome: string;
+  empreiteiras: {
+    nome: string;
+  } | null;
 };
 
 const formInicial = {
+  empreiteira_id: "",
   titulo_vaga: "",
   cidade: "",
   provincia: "",
@@ -36,7 +38,6 @@ const formInicial = {
   status_vaga: "Aberta",
   urgente: false,
   observacoes: "",
-  empreiteira_id: "",
 };
 
 export function VagasPage() {
@@ -45,7 +46,6 @@ export function VagasPage() {
   const [form, setForm] = useState(formInicial);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
-  
 
   async function carregarVagas() {
     setLoading(true);
@@ -53,11 +53,11 @@ export function VagasPage() {
     const { data, error } = await supabase
       .from("vagas")
       .select(`
-  *,
-  empreiteiras (
-    nome
-  )
-`)
+        *,
+        empreiteiras (
+          nome
+        )
+      `)
       .order("criado_em", { ascending: false });
 
     if (error) {
@@ -70,24 +70,25 @@ export function VagasPage() {
     setLoading(false);
   }
 
- useEffect(() => {
-  carregarVagas();
-  carregarEmpreiteiras();
-}, []);
   async function carregarEmpreiteiras() {
-  const { data, error } = await supabase
-    .from("empreiteiras")
-    .select("id, nome")
-    .eq("status", "Ativa")
-    .order("nome", { ascending: true });
+    const { data, error } = await supabase
+      .from("empreiteiras")
+      .select("id, nome")
+      .eq("status", "Ativa")
+      .order("nome", { ascending: true });
 
-  if (error) {
-    console.error("Erro ao carregar empreiteiras:", error);
-    setEmpreiteiras([]);
-  } else {
-    setEmpreiteiras((data || []) as Empreiteira[]);
+    if (error) {
+      console.error("Erro ao carregar empreiteiras:", error);
+      setEmpreiteiras([]);
+    } else {
+      setEmpreiteiras((data || []) as Empreiteira[]);
+    }
   }
-}
+
+  useEffect(() => {
+    carregarVagas();
+    carregarEmpreiteiras();
+  }, []);
 
   async function salvarVaga(event: React.FormEvent) {
     event.preventDefault();
@@ -95,23 +96,6 @@ export function VagasPage() {
 
     const { error } = await supabase.from("vagas").insert({
       empreiteira_id: form.empreiteira_id || null,
-      <div className="space-y-1">
-  <label className="text-sm font-medium">Empreiteira</label>
-  <select
-    value={form.empreiteira_id}
-    onChange={(e) =>
-      setForm({ ...form, empreiteira_id: e.target.value })
-    }
-    className="w-full rounded-md border px-3 py-2 text-sm"
-  >
-    <option value="">Selecione uma empreiteira</option>
-    {empreiteiras.map((empreiteira) => (
-      <option key={empreiteira.id} value={empreiteira.id}>
-        {empreiteira.nome}
-      </option>
-    ))}
-  </select>
-</div>
       titulo_vaga: form.titulo_vaga,
       cidade: form.cidade || null,
       provincia: form.provincia || null,
@@ -153,8 +137,26 @@ export function VagasPage() {
         <h2 className="mb-4 text-lg font-semibold">Cadastrar nova vaga</h2>
 
         <form onSubmit={salvarVaga} className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Empreiteira</label>
+            <select
+              value={form.empreiteira_id}
+              onChange={(e) =>
+                setForm({ ...form, empreiteira_id: e.target.value })
+              }
+              className="w-full rounded-md border px-3 py-2 text-sm"
+            >
+              <option value="">Selecione uma empreiteira</option>
+              {empreiteiras.map((empreiteira) => (
+                <option key={empreiteira.id} value={empreiteira.id}>
+                  {empreiteira.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Campo
-            label="Título da vaga"
+            label="Título da vaga / Fábrica"
             value={form.titulo_vaga}
             onChange={(v) => setForm({ ...form, titulo_vaga: v })}
             required
@@ -268,7 +270,7 @@ export function VagasPage() {
               <thead>
                 <tr className="border-b text-gray-500">
                   <th className="py-2">Empreiteira</th>
-                  <th className="py-2">Vaga</th>
+                  <th className="py-2">Vaga / Fábrica</th>
                   <th className="py-2">Local</th>
                   <th className="py-2">Salário</th>
                   <th className="py-2">Turno</th>
@@ -282,24 +284,28 @@ export function VagasPage() {
                 {vagas.map((vaga) => (
                   <tr key={vaga.id} className="border-b">
                     <td className="py-3">
+                      {vaga.empreiteiras?.nome || "-"}
+                    </td>
+
+                    <td className="py-3">
                       <div className="font-medium">{vaga.titulo_vaga}</div>
                       {vaga.urgente && (
                         <span className="mt-1 inline-block rounded bg-red-100 px-2 py-1 text-xs text-red-700">
                           Urgente
                         </span>
                       )}
-                      <td className="py-3">
-  {vaga.empreiteiras?.nome || "-"}
-</td>
                     </td>
+
                     <td className="py-3">
                       {vaga.cidade || "-"} / {vaga.provincia || "--"}
                     </td>
+
                     <td className="py-3">
                       {vaga.salario_hora_jpy
                         ? `¥ ${vaga.salario_hora_jpy}`
                         : "-"}
                     </td>
+
                     <td className="py-3">{vaga.turno || "-"}</td>
                     <td className="py-3">{vaga.escala || "-"}</td>
                     <td className="py-3">{vaga.quantidade_vagas || "-"}</td>
