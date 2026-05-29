@@ -33,7 +33,8 @@ type Historico = {
   status_anterior: string | null;
   status_novo: string | null;
   criado_em: string;
-  type Vaga = {
+};
+type Vaga = {
   id: string;
   titulo_vaga: string;
   cidade: string | null;
@@ -42,9 +43,8 @@ type Historico = {
   empreiteira_id: string | null;
   empreiteiras: {
     nome: string;
-  } | null;
-};
-
+    } | null;
+  } 
 type ApresentacaoVaga = {
   id: string;
   vaga_id: string | null;
