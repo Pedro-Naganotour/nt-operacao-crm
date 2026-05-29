@@ -9,6 +9,7 @@ import { StubPage } from "@/components/stub-page";
 import { KanbanPage } from "@/pages/KanbanPage";
 import { VagasPage } from "@/pages/VagasPage";
 import { EmpreiteirasPage } from "@/pages/EmpreiteirasPage";
+import { ProcessoPerfilPage } from "@/pages/ProcessoPerfilPage";
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="pos-venda" element={<StubPage title="Pós-venda" description="Check-ins de adaptação no Japão." />} />
         <Route path="equipe" element={<StubPage title="Equipe / Permissões" description="Usuários internos e perfis de acesso." />} />
       </Route>
+      <Route path="processos/:id" element={<ProcessoPerfilPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
