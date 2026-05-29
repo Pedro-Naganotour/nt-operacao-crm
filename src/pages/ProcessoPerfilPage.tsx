@@ -256,24 +256,7 @@ async function criarApresentacao(vaga: Vaga) {
     return;
   }
 
-  window.location.reload();
-}
-
-  const { error } = await supabase.from("entrevistas").insert({
-    processo_id: id,
-    apresentacao_id: apresentacaoId,
-    data_entrevista: data,
-    formato: "Online",
-    status_entrevista: "Agendada",
-    resultado: "Aguardando",
-  });
-
-  if (error) {
-    alert("Erro ao criar entrevista");
-    console.error(error);
-    return;
-  }
-
+ 
   window.location.reload();
 }
   return (
