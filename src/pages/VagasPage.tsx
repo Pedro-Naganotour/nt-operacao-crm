@@ -14,6 +14,14 @@ type Vaga = {
   status_vaga: string | null;
   urgente: boolean | null;
   observacoes: string | null;
+empreiteira_id: string | null;
+empreiteiras: {
+  nome: string;
+} | null;
+};
+type Empreiteira = {
+  id: string;
+  nome: string;
 };
 
 const formInicial = {
@@ -28,20 +36,28 @@ const formInicial = {
   status_vaga: "Aberta",
   urgente: false,
   observacoes: "",
+  empreiteira_id: "",
 };
 
 export function VagasPage() {
   const [vagas, setVagas] = useState<Vaga[]>([]);
+  const [empreiteiras, setEmpreiteiras] = useState<Empreiteira[]>([]);
   const [form, setForm] = useState(formInicial);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  
 
   async function carregarVagas() {
     setLoading(true);
 
     const { data, error } = await supabase
       .from("vagas")
-      .select("*")
+      .select(`
+  *,
+  empreiteiras (
+    nome
+  )
+`)
       .order("criado_em", { ascending: false });
 
     if (error) {
@@ -54,15 +70,48 @@ export function VagasPage() {
     setLoading(false);
   }
 
-  useEffect(() => {
-    carregarVagas();
-  }, []);
+ useEffect(() => {
+  carregarVagas();
+  carregarEmpreiteiras();
+}, []);
+  async function carregarEmpreiteiras() {
+  const { data, error } = await supabase
+    .from("empreiteiras")
+    .select("id, nome")
+    .eq("status", "Ativa")
+    .order("nome", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao carregar empreiteiras:", error);
+    setEmpreiteiras([]);
+  } else {
+    setEmpreiteiras((data || []) as Empreiteira[]);
+  }
+}
 
   async function salvarVaga(event: React.FormEvent) {
     event.preventDefault();
     setSalvando(true);
 
     const { error } = await supabase.from("vagas").insert({
+      empreiteira_id: form.empreiteira_id || null,
+      <div className="space-y-1">
+  <label className="text-sm font-medium">Empreiteira</label>
+  <select
+    value={form.empreiteira_id}
+    onChange={(e) =>
+      setForm({ ...form, empreiteira_id: e.target.value })
+    }
+    className="w-full rounded-md border px-3 py-2 text-sm"
+  >
+    <option value="">Selecione uma empreiteira</option>
+    {empreiteiras.map((empreiteira) => (
+      <option key={empreiteira.id} value={empreiteira.id}>
+        {empreiteira.nome}
+      </option>
+    ))}
+  </select>
+</div>
       titulo_vaga: form.titulo_vaga,
       cidade: form.cidade || null,
       provincia: form.provincia || null,
@@ -218,6 +267,7 @@ export function VagasPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b text-gray-500">
+                  <th className="py-2">Empreiteira</th>
                   <th className="py-2">Vaga</th>
                   <th className="py-2">Local</th>
                   <th className="py-2">Salário</th>
@@ -238,6 +288,9 @@ export function VagasPage() {
                           Urgente
                         </span>
                       )}
+                      <td className="py-3">
+  {vaga.empreiteiras?.nome || "-"}
+</td>
                     </td>
                     <td className="py-3">
                       {vaga.cidade || "-"} / {vaga.provincia || "--"}
