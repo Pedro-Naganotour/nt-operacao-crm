@@ -65,7 +65,7 @@ type MembroGrupo = {
 const abas = [
   "Resumo",
   "Dados pessoais",
-  "Processo atual",
+  "Processos",
   "Grupo familiar",
   "Histórico",
   "Documentos",
@@ -224,24 +224,44 @@ export function PassageiroPerfilPage() {
         </Card>
       )}
 
-      {abaAtiva === "Processo atual" && (
-        <Card titulo="Processo atual">
-          {processoAtual ? (
-            <>
-              <Info label="Código" value={processoAtual.codigo_processo} />
-              <Info label="Status" value={processoAtual.status_atual} />
-              <Info label="Fase" value={processoAtual.fase_atual} />
-              <Info label="Resultado" value={processoAtual.resultado_final} />
-              <Info label="Data início" value={processoAtual.data_inicio} />
-              <Info label="Data encerramento" value={processoAtual.data_encerramento} />
-              <Info label="Motivo encerramento" value={processoAtual.motivo_encerramento} />
-              <Info label="Observações" value={processoAtual.observacoes} />
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Nenhum processo encontrado.</p>
-          )}
-        </Card>
-      )}
+      {abaAtiva === "Processos" && (
+        <Card titulo="Processos desta pessoa">
+  {processos.length === 0 ? (
+    <p className="text-sm text-gray-500">
+      Nenhum processo encontrado.
+    </p>
+  ) : (
+    <div className="space-y-3">
+      {processos.map((processo) => (
+        <div
+          key={processo.id}
+          className="rounded-lg border p-4 flex items-center justify-between"
+        >
+          <div>
+            <p className="font-medium">
+              {processo.codigo_processo || "Sem código"}
+            </p>
+
+            <p className="text-sm text-gray-500">
+              Status: {processo.status_atual || "-"}
+            </p>
+
+            <p className="text-sm text-gray-500">
+              Fase: {processo.fase_atual || "-"}
+            </p>
+          </div>
+
+          <a
+            href={`/processos/${processo.id}`}
+            className="rounded bg-blue-600 px-3 py-2 text-white text-sm"
+          >
+            Abrir Processo
+          </a>
+        </div>
+      ))}
+    </div>
+  )}
+</Card>
 
       {abaAtiva === "Grupo familiar" && (
         <Card titulo="Grupo familiar">
