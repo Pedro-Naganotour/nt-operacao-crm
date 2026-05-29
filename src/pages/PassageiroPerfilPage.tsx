@@ -224,45 +224,45 @@ export function PassageiroPerfilPage() {
         </Card>
       )}
 
-      {abaAtiva === "Processos" && (
-        <Card titulo="Processos desta pessoa">
-  {processos.length === 0 ? (
-    <p className="text-sm text-gray-500">
-      Nenhum processo encontrado.
-    </p>
-  ) : (
-    <div className="space-y-3">
-      {processos.map((processo) => (
-        <div
-          key={processo.id}
-          className="rounded-lg border p-4 flex items-center justify-between"
-        >
-          <div>
-            <p className="font-medium">
-              {processo.codigo_processo || "Sem código"}
-            </p>
-
-            <p className="text-sm text-gray-500">
-              Status: {processo.status_atual || "-"}
-            </p>
-
-            <p className="text-sm text-gray-500">
-              Fase: {processo.fase_atual || "-"}
-            </p>
-          </div>
-
-          <a
-            href={`/processos/${processo.id}`}
-            className="rounded bg-blue-600 px-3 py-2 text-white text-sm"
+     {abaAtiva === "Processos" && (
+  <Card titulo="Processos desta pessoa">
+    {processos.length === 0 ? (
+      <p className="text-sm text-gray-500">
+        Nenhum processo encontrado.
+      </p>
+    ) : (
+      <div className="space-y-3">
+        {processos.map((processo) => (
+          <div
+            key={processo.id}
+            className="rounded-lg border p-4 flex items-center justify-between"
           >
-            Abrir Processo
-          </a>
-        </div>
-      ))}
-    </div>
-  )}
-</Card>
+            <div>
+              <p className="font-medium">
+                {processo.codigo_processo || "Sem código"}
+              </p>
 
+              <p className="text-sm text-gray-500">
+                Status: {processo.status_atual || "-"}
+              </p>
+
+              <p className="text-sm text-gray-500">
+                Fase: {processo.fase_atual || "-"}
+              </p>
+            </div>
+
+            <a
+              href={`/processos/${processo.id}`}
+              className="rounded bg-blue-600 px-3 py-2 text-white text-sm"
+            >
+              Abrir Processo
+            </a>
+          </div>
+        ))}
+      </div>
+    )}
+  </Card>
+)}
       {abaAtiva === "Grupo familiar" && (
         <Card titulo="Grupo familiar">
           {grupoFamiliar ? (
