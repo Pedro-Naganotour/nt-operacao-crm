@@ -41,7 +41,9 @@ export function PassageirosPage() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(initialForm);
-
+  const [grupoFamiliar, setGrupoFamiliar] = useState<GrupoFamiliar | null>(null);
+  const [membrosGrupo, setMembrosGrupo] = useState<MembroGrupo[]>([]);
+  
   const { data: pessoas = [], isLoading } = useQuery({
     queryKey: ["pessoas"],
     queryFn: async () => {
