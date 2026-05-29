@@ -33,6 +33,35 @@ type Historico = {
   status_anterior: string | null;
   status_novo: string | null;
   criado_em: string;
+  type Vaga = {
+  id: string;
+  titulo_vaga: string;
+  cidade: string | null;
+  provincia: string | null;
+  status_vaga: string | null;
+  empreiteira_id: string | null;
+  empreiteiras: {
+    nome: string;
+  } | null;
+};
+
+type ApresentacaoVaga = {
+  id: string;
+  vaga_id: string | null;
+  empreiteira_id: string | null;
+  data_apresentacao: string | null;
+  status: string | null;
+  resultado_final: string | null;
+  observacoes: string | null;
+  vagas: {
+    titulo_vaga: string;
+    cidade: string | null;
+    provincia: string | null;
+  } | null;
+  empreiteiras: {
+    nome: string;
+  } | null;
+};
 };
 
 const abas = [
@@ -49,10 +78,46 @@ export function ProcessoPerfilPage() {
   const [abaAtiva, setAbaAtiva] = useState("Resumo");
   const [processo, setProcesso] = useState<Processo | null>(null);
   const [historico, setHistorico] = useState<Historico[]>([]);
+  const [vagas, setVagas] = useState<Vaga[]>([]);
+const [apresentacoes, setApresentacoes] = useState<ApresentacaoVaga[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function carregarProcesso() {
+      const { data: vagasData } = await supabase
+  .from("vagas")
+  .select(`
+    id,
+    titulo_vaga,
+    cidade,
+    provincia,
+    status_vaga,
+    empreiteira_id,
+    empreiteiras (
+      nome
+    )
+  `)
+  .in("status_vaga", ["Aberta", "Em seleção", "Urgente"])
+  .order("criado_em", { ascending: false });
+
+const { data: apresentacoesData } = await supabase
+  .from("apresentacoes_vaga")
+  .select(`
+    *,
+    vagas (
+      titulo_vaga,
+      cidade,
+      provincia
+    ),
+    empreiteiras (
+      nome
+    )
+  `)
+  .eq("processo_id", id)
+  .order("criado_em", { ascending: false });
+
+setVagas((vagasData || []) as Vaga[]);
+setApresentacoes((apresentacoesData || []) as ApresentacaoVaga[]);
       if (!id) return;
 
       setLoading(true);
@@ -98,7 +163,34 @@ export function ProcessoPerfilPage() {
   if (loading) return <div className="p-6">Carregando processo...</div>;
 
   if (!processo) return <div className="p-6">Processo não encontrado.</div>;
+async function criarApresentacao(vaga: Vaga) {
+  if (!processo) return;
 
+  const { error } = await supabase.from("apresentacoes_vaga").insert({
+    processo_id: processo.id,
+    vaga_id: vaga.id,
+    empreiteira_id: vaga.empreiteira_id,
+    status: "Apresentação enviada",
+    data_apresentacao: new Date().toISOString().slice(0, 10),
+    observacoes: null,
+  });
+
+  if (error) {
+    alert("Erro ao criar apresentação.");
+    console.error(error);
+    return;
+  }
+
+  await supabase.from("historico").insert({
+    pessoa_id: processo.pessoa_id,
+    processo_id: processo.id,
+    tipo_evento: "Apresentação de vaga",
+    descricao: `Apresentação criada para a vaga ${vaga.titulo_vaga}.`,
+    status_novo: "Apresentação enviada",
+  });
+
+  window.location.reload();
+}
   return (
     <div className="space-y-6 p-6">
       <Link to="/passageiros" className="text-sm text-blue-600 hover:underline">
@@ -185,13 +277,75 @@ export function ProcessoPerfilPage() {
         </div>
       )}
 
-      {abaAtiva === "Vagas e Entrevistas" && (
-        <Card titulo="Vagas e Entrevistas">
-          <p className="text-sm text-gray-500">
-            Próxima etapa: listar apresentações de vaga e entrevistas ligadas a este processo.
-          </p>
-        </Card>
+     {abaAtiva === "Vagas e Entrevistas" && (
+  <div className="space-y-6">
+    <Card titulo="Apresentações deste processo">
+      {apresentacoes.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          Nenhuma apresentação criada ainda.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {apresentacoes.map((apresentacao) => (
+            <div key={apresentacao.id} className="rounded-lg border p-4">
+              <p className="font-medium">
+                {apresentacao.empreiteiras?.nome || "Empreiteira não informada"}
+              </p>
+              <p className="text-sm text-gray-600">
+                {apresentacao.vagas?.titulo_vaga || "Vaga não informada"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {apresentacao.vagas?.cidade || "-"} /{" "}
+                {apresentacao.vagas?.provincia || "--"}
+              </p>
+              <p className="mt-2 text-sm">
+                <strong>Status:</strong> {apresentacao.status || "-"}
+              </p>
+              <p className="text-sm">
+                <strong>Resultado:</strong> {apresentacao.resultado_final || "-"}
+              </p>
+            </div>
+          ))}
+        </div>
       )}
+    </Card>
+
+    <Card titulo="Vagas disponíveis para apresentação">
+      {vagas.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          Nenhuma vaga aberta encontrada.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {vagas.map((vaga) => (
+            <div
+              key={vaga.id}
+              className="rounded-lg border p-4 flex items-center justify-between"
+            >
+              <div>
+                <p className="font-medium">{vaga.titulo_vaga}</p>
+                <p className="text-sm text-gray-600">
+                  {vaga.empreiteiras?.nome || "Sem empreiteira"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {vaga.cidade || "-"} / {vaga.provincia || "--"} ·{" "}
+                  {vaga.status_vaga || "-"}
+                </p>
+              </div>
+
+              <button
+                onClick={() => criarApresentacao(vaga)}
+                className="rounded bg-blue-600 px-3 py-2 text-sm text-white"
+              >
+                Apresentar
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  </div>
+)}
 
       {abaAtiva === "Documentação" && (
         <Card titulo="Documentação">
