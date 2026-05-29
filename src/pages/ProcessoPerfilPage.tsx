@@ -235,6 +235,26 @@ async function criarApresentacao(vaga: Vaga) {
 
   window.location.reload();
  }
+  async function atualizarResultadoEntrevista(
+  entrevistaId: string,
+  novoResultado: string
+) {
+  const { error } = await supabase
+    .from("entrevistas")
+    .update({
+      resultado: novoResultado,
+      status_entrevista: "Realizada",
+    })
+    .eq("id", entrevistaId);
+
+  if (error) {
+    alert("Erro ao atualizar resultado.");
+    console.error(error);
+    return;
+  }
+
+  window.location.reload();
+}
   return (
     <div className="space-y-6 p-6">
       <Link to="/passageiros" className="text-sm text-blue-600 hover:underline">
@@ -379,9 +399,26 @@ async function criarApresentacao(vaga: Vaga) {
                         <p>
                           <strong>Status:</strong> {entrevista.status_entrevista || "-"}
                         </p>
-                        <p>
-                          <strong>Resultado:</strong> {entrevista.resultado || "-"}
-                        </p>
+                        
+                         <div className="mt-2">
+  <label className="mr-2 font-semibold">Resultado:</label>
+
+  <select
+    value={entrevista.resultado || "Aguardando"}
+    onChange={(e) =>
+      atualizarResultadoEntrevista(
+        entrevista.id,
+        e.target.value
+      )
+    }
+    className="rounded border px-2 py-1"
+  >
+    <option value="Aguardando">Aguardando</option>
+    <option value="Aprovado">Aprovado</option>
+    <option value="Reprovado">Reprovado</option>
+  </select>
+</div>
+                       
                       </div>
                     ))}
                 </div>
